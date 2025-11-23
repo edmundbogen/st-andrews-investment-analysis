@@ -366,10 +366,10 @@
             buildMonths: 18,
             sellMonths: 4,
             sellingCostsPct: 0.07,
-            investorReturnPct: 0.15, // 15% total return
-            edmundCarriedInterest: 0.10,
-            builderCarriedInterest: 0.10,
-            investorCarriedInterest: 0.80,
+            investorReturnPct: 0.15, // 15% total return target
+            edmundEquity: 0.05, // 5% equity ownership
+            builderEquity: 0.05, // 5% equity ownership
+            investorEquity: 0.90, // 90% equity ownership
             edmundCommissionPct: 0.06
         };
 
@@ -416,21 +416,20 @@
             const netProceeds = salePrice - sellingCosts + p.refundableDeposit;
             const grossProfit = netProceeds - totalCapital;
 
-            // Investor returns
+            // Equity-based distribution (90/5/5 split)
+            const investorEquityShare = netProceeds * p.investorEquity;
+            const edmundEquityShare = netProceeds * p.edmundEquity;
+            const builderEquityShare = netProceeds * p.builderEquity;
+
+            // Investor return analysis
             const investorPreferredReturn = totalCapital * p.investorReturnPct;
             const totalNeededForInvestors = totalCapital + investorPreferredReturn;
-            const shortfall = totalNeededForInvestors - netProceeds;
-            const remainingProfit = Math.max(0, netProceeds - totalNeededForInvestors);
-
-            // Profit distribution (only if there's remaining profit)
-            const edmundCarriedProfit = remainingProfit * p.edmundCarriedInterest;
-            const builderCarriedProfit = remainingProfit * p.builderCarriedInterest;
-            const investorCarriedProfit = remainingProfit * p.investorCarriedInterest;
+            const investorShortfall = totalNeededForInvestors - investorEquityShare;
 
             // Total compensation
-            const edmundTotal = edmundCommission + edmundCarriedProfit;
-            const builderTotal = builderCarriedProfit;
-            const investorTotal = (shortfall <= 0 ? totalNeededForInvestors : netProceeds) + investorCarriedProfit;
+            const edmundTotal = edmundCommission + edmundEquityShare;
+            const builderTotal = builderEquityShare;
+            const investorTotal = investorEquityShare;
 
             // ROI calculations
             const investorROI = ((investorTotal - totalCapital) / totalCapital);
@@ -448,11 +447,10 @@
                 grossProfit,
                 investorPreferredReturn,
                 totalNeededForInvestors,
-                shortfall,
-                remainingProfit,
-                edmundCarriedProfit,
-                builderCarriedProfit,
-                investorCarriedProfit,
+                investorShortfall,
+                investorEquityShare,
+                edmundEquityShare,
+                builderEquityShare,
                 edmundTotal,
                 builderTotal,
                 investorTotal,
@@ -485,19 +483,18 @@
             const [salePrice, setSalePrice] = useState(8250000);
             const metrics = useMemo(() => calculateDealMetrics(salePrice), [salePrice]);
             const breakeven = useMemo(() => {
-                // Binary search for breakeven price
+                // Binary search for breakeven price where investors get capital + 15% return
                 let low = 7000000, high = 15000000;
                 while (high - low > 1000) {
                     const mid = (low + high) / 2;
                     const m = calculateDealMetrics(mid);
-                    if (m.shortfall > 0) low = mid;
+                    if (m.investorShortfall > 0) low = mid;
                     else high = mid;
                 }
                 return high;
             }, []);
 
-            const isDealProfitable = metrics.shortfall <= 0;
-            const meetsInvestorReturn = metrics.shortfall <= 0;
+            const meetsInvestorReturn = metrics.investorShortfall <= 0;
 
             return (
                 <div className="container">
@@ -640,22 +637,22 @@
                         {!meetsInvestorReturn && (
                             <div className="alert alert-warning">
                                 <strong>⚠️ Deal Does Not Meet Investor Return Target</strong><br/>
-                                Shortfall of {formatCurrency(Math.abs(metrics.shortfall))} to satisfy 15% investor return.
+                                Shortfall of {formatCurrency(Math.abs(metrics.investorShortfall))} to satisfy 15% investor return.
                                 Investors would receive only {formatPercent(metrics.investorROI)} return instead of {formatPercent(DEAL_PARAMS.investorReturnPct)}.
                             </div>
                         )}
 
-                        {meetsInvestorReturn && metrics.remainingProfit === 0 && (
+                        {meetsInvestorReturn && metrics.investorShortfall >= -10000 && (
                             <div className="alert alert-info">
                                 <strong>ℹ️ Breakeven Scenario</strong><br/>
-                                Investors receive their full capital plus 15% return. No additional profit for carried interest distribution.
+                                Investors receive approximately their full capital plus 15% return with their 90% equity share.
                             </div>
                         )}
 
-                        {meetsInvestorReturn && metrics.remainingProfit > 0 && (
+                        {meetsInvestorReturn && metrics.investorShortfall < -10000 && (
                             <div className="alert alert-success">
-                                <strong>✓ Deal is Profitable</strong><br/>
-                                After investor returns, {formatCurrency(metrics.remainingProfit)} available for carried interest distribution.
+                                <strong>✓ Deal Exceeds Investor Return Target</strong><br/>
+                                Investors receive {formatPercent(metrics.investorROI)} return, exceeding the 15% target. Equity splits 90% investors, 5% Edmund, 5% Builder.
                             </div>
                         )}
 
@@ -685,92 +682,79 @@
                         </div>
                     </div>
 
-                    {/* Profit Distribution Waterfall */}
+                    {/* Equity Distribution */}
                     <div className="card">
-                        <h2>Profit Distribution Waterfall</h2>
+                        <h2>Equity Distribution at Sale</h2>
                         <table className="distribution-table">
                             <thead>
                                 <tr>
-                                    <th>Priority</th>
-                                    <th>Recipient</th>
+                                    <th>Partner</th>
+                                    <th>Equity %</th>
                                     <th>Description</th>
-                                    <th style={{textAlign: 'right'}}>Amount</th>
+                                    <th style={{textAlign: 'right'}}>Distribution</th>
                                 </tr>
                             </thead>
                             <tbody>
+                                <tr style={{background: '#f9f9f9'}}>
+                                    <td colSpan="3"><strong>Sale Price</strong></td>
+                                    <td className="amount" style={{textAlign: 'right'}}>{formatCurrency(metrics.salePrice)}</td>
+                                </tr>
                                 <tr>
-                                    <td>0</td>
-                                    <td><strong>Selling Costs</strong></td>
-                                    <td>Total transaction costs (7%)</td>
+                                    <td colSpan="3"><strong>Less: Selling Costs (7%)</strong></td>
                                     <td className="amount" style={{textAlign: 'right'}}>-{formatCurrency(metrics.sellingCosts)}</td>
                                 </tr>
                                 <tr style={{background: '#e3f2fd'}}>
                                     <td></td>
-                                    <td><strong>Edmund (Commission)</strong></td>
-                                    <td>6% listing commission (within selling costs)</td>
-                                    <td className="amount" style={{textAlign: 'right', color: '#00a000'}}>
+                                    <td></td>
+                                    <td style={{paddingLeft: '20px', fontStyle: 'italic'}}>Edmund's Listing Commission (6%)</td>
+                                    <td className="amount" style={{textAlign: 'right', color: '#00a000', fontStyle: 'italic'}}>
                                         {formatCurrency(metrics.edmundCommission)}
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td>1</td>
-                                    <td><strong>Investors</strong></td>
-                                    <td>Return of capital</td>
-                                    <td className="amount" style={{textAlign: 'right'}}>{formatCurrency(metrics.totalCapital)}</td>
+                                    <td colSpan="3"><strong>Plus: Refundable Deposit Returned</strong></td>
+                                    <td className="amount" style={{textAlign: 'right'}}>+{formatCurrency(DEAL_PARAMS.refundableDeposit)}</td>
                                 </tr>
-                                <tr>
-                                    <td>2</td>
+                                <tr style={{background: '#f0f0f0', fontWeight: '600'}}>
+                                    <td colSpan="3"><strong>Net Proceeds for Distribution</strong></td>
+                                    <td className="amount" style={{textAlign: 'right', color: '#1a3e5c'}}>{formatCurrency(metrics.netProceeds)}</td>
+                                </tr>
+                                <tr style={{background: '#e8f5e9'}}>
                                     <td><strong>Investors</strong></td>
-                                    <td>15% total return</td>
-                                    <td className="amount" style={{textAlign: 'right'}}>
-                                        {formatCurrency(Math.min(metrics.investorPreferredReturn, Math.max(0, metrics.netProceeds - metrics.totalCapital)))}
+                                    <td><strong>90%</strong></td>
+                                    <td>Equity ownership (provided all capital)</td>
+                                    <td className="amount" style={{textAlign: 'right', color: '#00a000'}}>
+                                        {formatCurrency(metrics.investorEquityShare)}
                                     </td>
                                 </tr>
                                 {!meetsInvestorReturn && (
                                     <tr style={{background: '#fff3cd'}}>
                                         <td></td>
-                                        <td><strong>Shortfall</strong></td>
-                                        <td>Unable to meet investor return</td>
-                                        <td className="amount" style={{textAlign: 'right', color: '#d32f2f'}}>
-                                            -{formatCurrency(Math.abs(metrics.shortfall))}
+                                        <td></td>
+                                        <td style={{paddingLeft: '20px', fontStyle: 'italic'}}>
+                                            ⚠️ Shortfall to reach 15% return target
+                                        </td>
+                                        <td className="amount" style={{textAlign: 'right', color: '#d32f2f', fontStyle: 'italic'}}>
+                                            -{formatCurrency(Math.abs(metrics.investorShortfall))}
                                         </td>
                                     </tr>
                                 )}
-                                {metrics.remainingProfit > 0 && (
-                                    <>
-                                        <tr style={{background: '#f0f0f0'}}>
-                                            <td>3</td>
-                                            <td colSpan="2"><strong>Remaining Profit for Distribution</strong></td>
-                                            <td className="amount" style={{textAlign: 'right', color: '#00a000'}}>
-                                                {formatCurrency(metrics.remainingProfit)}
-                                            </td>
-                                        </tr>
-                                        <tr style={{background: '#e3f2fd'}}>
-                                            <td></td>
-                                            <td><strong>Edmund</strong></td>
-                                            <td>10% carried interest</td>
-                                            <td className="amount" style={{textAlign: 'right', color: '#00a000'}}>
-                                                {formatCurrency(metrics.edmundCarriedProfit)}
-                                            </td>
-                                        </tr>
-                                        <tr style={{background: '#f3e5f5'}}>
-                                            <td></td>
-                                            <td><strong>Builder</strong></td>
-                                            <td>10% carried interest</td>
-                                            <td className="amount" style={{textAlign: 'right', color: '#00a000'}}>
-                                                {formatCurrency(metrics.builderCarriedProfit)}
-                                            </td>
-                                        </tr>
-                                        <tr style={{background: '#e8f5e9'}}>
-                                            <td></td>
-                                            <td><strong>Investors</strong></td>
-                                            <td>80% carried interest</td>
-                                            <td className="amount" style={{textAlign: 'right', color: '#00a000'}}>
-                                                {formatCurrency(metrics.investorCarriedProfit)}
-                                            </td>
-                                        </tr>
-                                    </>
-                                )}
+                                <tr style={{background: '#e3f2fd'}}>
+                                    <td><strong>Edmund</strong></td>
+                                    <td><strong>5%</strong></td>
+                                    <td>Carried interest (deal originator)</td>
+                                    <td className="amount" style={{textAlign: 'right', color: '#00a000'}}>
+                                        {formatCurrency(metrics.edmundEquityShare)}
+                                    </td>
+                                </tr>
+                                <tr style={{background: '#f3e5f5'}}>
+                                    <td><strong>Builder</strong></td>
+                                    <td><strong>5%</strong></td>
+                                    <td>Carried interest (development partner)</td>
+                                    <td className="amount" style={{textAlign: 'right', color: '#00a000'}}>
+                                        {formatCurrency(metrics.builderEquityShare)}
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -791,14 +775,14 @@
                                 <div className="metric-value">{formatCurrency(metrics.edmundTotal)}</div>
                                 <div style={{fontSize: '14px', color: '#666', marginTop: '8px'}}>
                                     Commission: {formatCurrency(metrics.edmundCommission)}<br/>
-                                    Carried Interest: {formatCurrency(metrics.edmundCarriedProfit)}
+                                    5% Equity: {formatCurrency(metrics.edmundEquityShare)}
                                 </div>
                             </div>
                             <div className="metric" style={{borderLeftColor: '#7b1fa2'}}>
                                 <div className="metric-label">Builder Total</div>
                                 <div className="metric-value">{formatCurrency(metrics.builderTotal)}</div>
                                 <div style={{fontSize: '14px', color: '#666', marginTop: '8px'}}>
-                                    10% carried interest
+                                    5% equity ownership
                                 </div>
                             </div>
                         </div>
@@ -814,11 +798,13 @@
                                 <span style={{color: '#d32f2f'}}>{formatCurrency(breakeven - salePrice)} below breakeven ⚠️</span>
                             }</p>
                             <p><strong>Timeline:</strong> {DEAL_PARAMS.buildMonths} months construction + {DEAL_PARAMS.sellMonths} months to sell = {DEAL_PARAMS.buildMonths + DEAL_PARAMS.sellMonths} months total</p>
-                            <p><strong>Edmund's Dual Compensation:</strong></p>
+                            <p><strong>Equity Structure:</strong></p>
                             <ul style={{marginLeft: '20px', marginTop: '8px'}}>
-                                <li>Listing commission ({formatPercent(DEAL_PARAMS.edmundCommissionPct)}) paid from selling costs</li>
-                                <li>Carried interest ({formatPercent(DEAL_PARAMS.edmundCarriedInterest)}) from remaining profits after investor returns</li>
+                                <li>Investors: 90% equity (provide 100% of capital)</li>
+                                <li>Edmund: 5% equity (deal originator) + 6% listing commission</li>
+                                <li>Builder: 5% equity (development partner)</li>
                             </ul>
+                            <p style={{marginTop: '15px'}}><strong>Note:</strong> Breakeven represents sale price where investors achieve their 15% return target with their 90% equity share.</p>
                         </div>
                     </div>
 
