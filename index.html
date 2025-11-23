@@ -414,8 +414,8 @@
             return (value * 100).toFixed(2) + '%';
         }
 
-        function calculateDealMetrics(salePrice) {
-            const p = DEAL_PARAMS;
+        function calculateDealMetrics(salePrice, buildCostPerSf = DEAL_PARAMS.buildCostPerSqFt) {
+            const p = { ...DEAL_PARAMS, buildCostPerSqFt: buildCostPerSf };
             const totalMonths = p.buildMonths + p.sellMonths;
 
             // Acquisition costs
@@ -518,30 +518,32 @@
 
         function App() {
             const [salePrice, setSalePrice] = useState(8250000);
-            const metrics = useMemo(() => calculateDealMetrics(salePrice), [salePrice]);
+            const [buildCostPerSf, setBuildCostPerSf] = useState(600);
+
+            const metrics = useMemo(() => calculateDealMetrics(salePrice, buildCostPerSf), [salePrice, buildCostPerSf]);
             // True breakeven: investors get capital back (0% return)
             const trueBreakeven = useMemo(() => {
-                let low = 6000000, high = 10000000;
+                let low = 6000000, high = 12000000;
                 while (high - low > 1000) {
                     const mid = (low + high) / 2;
-                    const m = calculateDealMetrics(mid);
+                    const m = calculateDealMetrics(mid, buildCostPerSf);
                     if (m.investorTotal < m.totalCapital) low = mid;
                     else high = mid;
                 }
                 return high;
-            }, []);
+            }, [buildCostPerSf]);
 
             // 15% return target: investors get capital + 15% return
             const targetReturn = useMemo(() => {
                 let low = 7000000, high = 15000000;
                 while (high - low > 1000) {
                     const mid = (low + high) / 2;
-                    const m = calculateDealMetrics(mid);
+                    const m = calculateDealMetrics(mid, buildCostPerSf);
                     if (m.investorShortfall > 0) low = mid;
                     else high = mid;
                 }
                 return high;
-            }, []);
+            }, [buildCostPerSf]);
 
             const meetsInvestorReturn = metrics.investorShortfall <= 0;
 
@@ -621,7 +623,7 @@
                             <div className="cost-section">
                                 <h3>Development Costs</h3>
                                 <div className="cost-item">
-                                    <span>Build Cost (7,000 sf @ $500/sf)</span>
+                                    <span>Build Cost (7,000 sf @ ${buildCostPerSf}/sf)</span>
                                     <span>{formatCurrency(metrics.breakdown.development.buildCost)}</span>
                                 </div>
                                 <div className="cost-item">
@@ -667,6 +669,37 @@
                                 <span>Carrying Total</span>
                                 <span>{formatCurrency(metrics.totalCarrying)}</span>
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Interactive Build Cost Slider */}
+                    <div className="card">
+                        <h2>Build Cost Sensitivity Analysis</h2>
+                        <div className="slider-container">
+                            <div className="current-price" style={{fontSize: '36px'}}>
+                                ${buildCostPerSf}/sf
+                            </div>
+                            <div style={{textAlign: 'center', color: '#666', fontSize: '14px', marginBottom: '15px'}}>
+                                Total Build: {formatCurrency(buildCostPerSf * DEAL_PARAMS.homeSize)}
+                            </div>
+                            <input
+                                type="range"
+                                min="500"
+                                max="625"
+                                step="5"
+                                value={buildCostPerSf}
+                                onChange={(e) => setBuildCostPerSf(Number(e.target.value))}
+                                className="slider"
+                                style={{background: 'linear-gradient(to right, #00a8e1 0%, #1a3e5c 100%)'}}
+                            />
+                            <div className="slider-label">
+                                <span>$500/sf</span>
+                                <span>$625/sf</span>
+                            </div>
+                        </div>
+                        <div style={{marginTop: '20px', padding: '15px', background: '#f0f8ff', borderRadius: '6px', fontSize: '14px'}}>
+                            <strong>Note:</strong> Adjust build cost to see impact on capital required, breakeven, and investor returns.
+                            Luxury construction typically ranges $500-$625/sf depending on finishes and market conditions.
                         </div>
                     </div>
 
