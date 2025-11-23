@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>St Andrews Investment Analysis | Edmund Bogen</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/recharts@2.5.0/dist/Recharts.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
+            background: #f4f4f4;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a3e5c 0%, #2a5a7c 100%);
+            color: white;
+            padding: 60px 40px;
+            border-radius: 8px;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 42px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .card h2 {
+            color: #1a3e5c;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #00a8e1;
+            display: inline-block;
+        }
+
+        .slider-container {
+            margin: 30px 0;
+        }
+
+        .slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #e0e0e0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #00a8e1;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #00a8e1;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .current-price {
+            text-align: center;
+            font-size: 48px;
+            font-weight: 300;
+            color: #1a3e5c;
+            margin: 20px 0;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .metric {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 6px;
+            border-left: 4px solid #00a8e1;
+        }
+
+        .metric-label {
+            font-size: 13px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .metric-value {
+            font-size: 28px;
+            font-weight: 600;
+            color: #1a3e5c;
+        }
+
+        .metric-value.positive {
+            color: #00a000;
+        }
+
+        .metric-value.negative {
+            color: #d32f2f;
+        }
+
+        .distribution-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .distribution-table th {
+            background: #1a3e5c;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 1px;
+        }
+
+        .distribution-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .distribution-table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        .distribution-table .amount {
+            font-weight: 600;
+            font-size: 18px;
+            color: #1a3e5c;
+        }
+
+        .alert {
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+            font-weight: 500;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            color: #856404;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            color: #155724;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            border-left: 4px solid #00a8e1;
+            color: #0c5460;
+        }
+
+        .cost-breakdown {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 20px 0;
+        }
+
+        .cost-section h3 {
+            color: #1a3e5c;
+            font-size: 18px;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #00a8e1;
+        }
+
+        .cost-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .cost-item.total {
+            font-weight: 600;
+            font-size: 18px;
+            color: #1a3e5c;
+            border-top: 2px solid #1a3e5c;
+            margin-top: 10px;
+            padding-top: 15px;
+        }
+
+        .breakeven-marker {
+            text-align: center;
+            padding: 15px;
+            background: #00a8e1;
+            color: white;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 20px 0;
+        }
+
+        @media print {
+            .slider-container {
+                display: none;
+            }
+        }
+
+        .team-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin: 30px 0;
+        }
+
+        .team-member {
+            background: linear-gradient(to bottom, #1a3e5c 120px, #f9f9f9 120px);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .team-member-header {
+            padding: 30px;
+            color: white;
+            text-align: center;
+        }
+
+        .team-member-header h3 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .team-member-header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .team-member-body {
+            padding: 30px;
+            line-height: 1.7;
+            color: #333;
+        }
+
+        .team-member-body h4 {
+            color: #1a3e5c;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 20px 0 10px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .team-member-body p {
+            margin-bottom: 15px;
+        }
+
+        .team-member.placeholder {
+            background: linear-gradient(to bottom, #7b1fa2 120px, #f3e5f5 120px);
+        }
+
+        .team-member.placeholder .team-member-body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 300px;
+            font-style: italic;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .cost-breakdown {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 28px;
+            }
+
+            .current-price {
+                font-size: 36px;
+            }
+
+            .team-section {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useMemo } = React;
+
+        // Financial constants
+        const DEAL_PARAMS = {
+            purchasePrice: 2000000,
+            clubDeposit: 500000,
+            refundableDeposit: 250000,
+            closingCostsPct: 0.035,
+            dueDiligence: 7500,
+            buildCostPerSqFt: 500,
+            homeSize: 7000,
+            contingencyPct: 0.12,
+            architectPct: 0.06,
+            permitsAndFees: 150000,
+            clubDuesAnnual: 70000,
+            propertyTaxPct: 0.018,
+            insurancePct: 0.0075,
+            utilitiesMonthly: 500,
+            buildMonths: 18,
+            sellMonths: 4,
+            sellingCostsPct: 0.07,
+            investorReturnPct: 0.15, // 15% total return
+            edmundCarriedInterest: 0.10,
+            builderCarriedInterest: 0.10,
+            investorCarriedInterest: 0.80,
+            edmundCommissionPct: 0.06
+        };
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(value);
+        }
+
+        function formatPercent(value) {
+            return (value * 100).toFixed(2) + '%';
+        }
+
+        function calculateDealMetrics(salePrice) {
+            const p = DEAL_PARAMS;
+            const totalMonths = p.buildMonths + p.sellMonths;
+
+            // Acquisition costs
+            const closingCosts = p.purchasePrice * p.closingCostsPct;
+            const totalAcquisition = p.purchasePrice + closingCosts + p.dueDiligence + (p.clubDeposit - p.refundableDeposit);
+
+            // Development costs
+            const buildCost = p.buildCostPerSqFt * p.homeSize;
+            const contingency = buildCost * p.contingencyPct;
+            const architect = buildCost * p.architectPct;
+            const totalDevelopment = buildCost + contingency + architect + p.permitsAndFees;
+
+            // Carrying costs
+            const clubDuesTotal = (p.clubDuesAnnual / 12) * totalMonths;
+            const propertyTaxTotal = (p.purchasePrice * p.propertyTaxPct / 12) * totalMonths;
+            const insuranceTotal = (p.purchasePrice * p.insurancePct / 12) * totalMonths;
+            const utilitiesTotal = p.utilitiesMonthly * totalMonths;
+            const totalCarrying = clubDuesTotal + propertyTaxTotal + insuranceTotal + utilitiesTotal;
+
+            // Total capital invested
+            const totalCapital = totalAcquisition + totalDevelopment + totalCarrying;
+
+            // Exit calculations
+            const sellingCosts = salePrice * p.sellingCostsPct;
+            const edmundCommission = salePrice * p.edmundCommissionPct;
+            const netProceeds = salePrice - sellingCosts + p.refundableDeposit;
+            const grossProfit = netProceeds - totalCapital;
+
+            // Investor returns
+            const investorPreferredReturn = totalCapital * p.investorReturnPct;
+            const totalNeededForInvestors = totalCapital + investorPreferredReturn;
+            const shortfall = totalNeededForInvestors - netProceeds;
+            const remainingProfit = Math.max(0, netProceeds - totalNeededForInvestors);
+
+            // Profit distribution (only if there's remaining profit)
+            const edmundCarriedProfit = remainingProfit * p.edmundCarriedInterest;
+            const builderCarriedProfit = remainingProfit * p.builderCarriedInterest;
+            const investorCarriedProfit = remainingProfit * p.investorCarriedInterest;
+
+            // Total compensation
+            const edmundTotal = edmundCommission + edmundCarriedProfit;
+            const builderTotal = builderCarriedProfit;
+            const investorTotal = (shortfall <= 0 ? totalNeededForInvestors : netProceeds) + investorCarriedProfit;
+
+            // ROI calculations
+            const investorROI = ((investorTotal - totalCapital) / totalCapital);
+            const overallROI = grossProfit / totalCapital;
+
+            return {
+                totalCapital,
+                totalAcquisition,
+                totalDevelopment,
+                totalCarrying,
+                salePrice,
+                sellingCosts,
+                edmundCommission,
+                netProceeds,
+                grossProfit,
+                investorPreferredReturn,
+                totalNeededForInvestors,
+                shortfall,
+                remainingProfit,
+                edmundCarriedProfit,
+                builderCarriedProfit,
+                investorCarriedProfit,
+                edmundTotal,
+                builderTotal,
+                investorTotal,
+                investorROI,
+                overallROI,
+                breakdown: {
+                    acquisition: {
+                        purchasePrice: p.purchasePrice,
+                        clubDepositNonRefundable: p.clubDeposit - p.refundableDeposit,
+                        closingCosts,
+                        dueDiligence: p.dueDiligence
+                    },
+                    development: {
+                        buildCost,
+                        contingency,
+                        architect,
+                        permits: p.permitsAndFees
+                    },
+                    carrying: {
+                        clubDues: clubDuesTotal,
+                        propertyTax: propertyTaxTotal,
+                        insurance: insuranceTotal,
+                        utilities: utilitiesTotal
+                    }
+                }
+            };
+        }
+
+        function App() {
+            const [salePrice, setSalePrice] = useState(8250000);
+            const metrics = useMemo(() => calculateDealMetrics(salePrice), [salePrice]);
+            const breakeven = useMemo(() => {
+                // Binary search for breakeven price
+                let low = 7000000, high = 15000000;
+                while (high - low > 1000) {
+                    const mid = (low + high) / 2;
+                    const m = calculateDealMetrics(mid);
+                    if (m.shortfall > 0) low = mid;
+                    else high = mid;
+                }
+                return high;
+            }, []);
+
+            const isDealProfitable = metrics.shortfall <= 0;
+            const meetsInvestorReturn = metrics.shortfall <= 0;
+
+            return (
+                <div className="container">
+                    <div className="header">
+                        <h1>St Andrews Investment Analysis</h1>
+                        <p>Luxury Development ROI Calculator | Edmund Bogen Team</p>
+                    </div>
+
+                    {/* Deal Summary */}
+                    <div className="card">
+                        <h2>Investment Summary</h2>
+                        <div className="metrics-grid">
+                            <div className="metric">
+                                <div className="metric-label">Total Capital Required</div>
+                                <div className="metric-value">{formatCurrency(metrics.totalCapital)}</div>
+                            </div>
+                            <div className="metric">
+                                <div className="metric-label">Build Timeline</div>
+                                <div className="metric-value">{DEAL_PARAMS.buildMonths + DEAL_PARAMS.sellMonths} Months</div>
+                            </div>
+                            <div className="metric">
+                                <div className="metric-label">Breakeven Sale Price</div>
+                                <div className="metric-value">{formatCurrency(breakeven)}</div>
+                            </div>
+                            <div className="metric">
+                                <div className="metric-label">Investor Return Target</div>
+                                <div className="metric-value">{formatPercent(DEAL_PARAMS.investorReturnPct)} Total</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Cost Breakdown */}
+                    <div className="card">
+                        <h2>Cost Breakdown</h2>
+                        <div className="cost-breakdown">
+                            <div className="cost-section">
+                                <h3>Acquisition Costs</h3>
+                                <div className="cost-item">
+                                    <span>Purchase Price</span>
+                                    <span>{formatCurrency(metrics.breakdown.acquisition.purchasePrice)}</span>
+                                </div>
+                                <div className="cost-item">
+                                    <span>Club Deposit (Non-Refundable)</span>
+                                    <span>{formatCurrency(metrics.breakdown.acquisition.clubDepositNonRefundable)}</span>
+                                </div>
+                                <div className="cost-item">
+                                    <span>Closing Costs (3.5%)</span>
+                                    <span>{formatCurrency(metrics.breakdown.acquisition.closingCosts)}</span>
+                                </div>
+                                <div className="cost-item">
+                                    <span>Due Diligence</span>
+                                    <span>{formatCurrency(metrics.breakdown.acquisition.dueDiligence)}</span>
+                                </div>
+                                <div className="cost-item total">
+                                    <span>Acquisition Total</span>
+                                    <span>{formatCurrency(metrics.totalAcquisition)}</span>
+                                </div>
+                            </div>
+
+                            <div className="cost-section">
+                                <h3>Development Costs</h3>
+                                <div className="cost-item">
+                                    <span>Build Cost (7,000 sf @ $500/sf)</span>
+                                    <span>{formatCurrency(metrics.breakdown.development.buildCost)}</span>
+                                </div>
+                                <div className="cost-item">
+                                    <span>Contingency (12%)</span>
+                                    <span>{formatCurrency(metrics.breakdown.development.contingency)}</span>
+                                </div>
+                                <div className="cost-item">
+                                    <span>Architect/Engineering (6%)</span>
+                                    <span>{formatCurrency(metrics.breakdown.development.architect)}</span>
+                                </div>
+                                <div className="cost-item">
+                                    <span>Permits & Impact Fees</span>
+                                    <span>{formatCurrency(metrics.breakdown.development.permits)}</span>
+                                </div>
+                                <div className="cost-item total">
+                                    <span>Development Total</span>
+                                    <span>{formatCurrency(metrics.totalDevelopment)}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="cost-section" style={{marginTop: '30px'}}>
+                            <h3>Carrying Costs (22 Months)</h3>
+                            <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px'}}>
+                                <div className="cost-item">
+                                    <span>Club Dues</span>
+                                    <span>{formatCurrency(metrics.breakdown.carrying.clubDues)}</span>
+                                </div>
+                                <div className="cost-item">
+                                    <span>Property Taxes</span>
+                                    <span>{formatCurrency(metrics.breakdown.carrying.propertyTax)}</span>
+                                </div>
+                                <div className="cost-item">
+                                    <span>Insurance</span>
+                                    <span>{formatCurrency(metrics.breakdown.carrying.insurance)}</span>
+                                </div>
+                                <div className="cost-item">
+                                    <span>Utilities</span>
+                                    <span>{formatCurrency(metrics.breakdown.carrying.utilities)}</span>
+                                </div>
+                            </div>
+                            <div className="cost-item total">
+                                <span>Carrying Total</span>
+                                <span>{formatCurrency(metrics.totalCarrying)}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Interactive Sale Price Slider */}
+                    <div className="card">
+                        <h2>Sale Price Scenario Analysis</h2>
+                        <div className="slider-container">
+                            <div className="current-price">
+                                {formatCurrency(salePrice)}
+                            </div>
+                            <input
+                                type="range"
+                                min="7000000"
+                                max="12000000"
+                                step="50000"
+                                value={salePrice}
+                                onChange={(e) => setSalePrice(Number(e.target.value))}
+                                className="slider"
+                            />
+                            <div className="slider-label">
+                                <span>$7,000,000</span>
+                                <span>$12,000,000</span>
+                            </div>
+                        </div>
+
+                        {salePrice >= breakeven - 50000 && salePrice <= breakeven + 50000 && (
+                            <div className="breakeven-marker">
+                                ⚖️ BREAKEVEN POINT - Investors receive capital + 15% return, $0 remaining profit
+                            </div>
+                        )}
+
+                        {!meetsInvestorReturn && (
+                            <div className="alert alert-warning">
+                                <strong>⚠️ Deal Does Not Meet Investor Return Target</strong><br/>
+                                Shortfall of {formatCurrency(Math.abs(metrics.shortfall))} to satisfy 15% investor return.
+                                Investors would receive only {formatPercent(metrics.investorROI)} return instead of {formatPercent(DEAL_PARAMS.investorReturnPct)}.
+                            </div>
+                        )}
+
+                        {meetsInvestorReturn && metrics.remainingProfit === 0 && (
+                            <div className="alert alert-info">
+                                <strong>ℹ️ Breakeven Scenario</strong><br/>
+                                Investors receive their full capital plus 15% return. No additional profit for carried interest distribution.
+                            </div>
+                        )}
+
+                        {meetsInvestorReturn && metrics.remainingProfit > 0 && (
+                            <div className="alert alert-success">
+                                <strong>✓ Deal is Profitable</strong><br/>
+                                After investor returns, {formatCurrency(metrics.remainingProfit)} available for carried interest distribution.
+                            </div>
+                        )}
+
+                        <div className="metrics-grid">
+                            <div className="metric">
+                                <div className="metric-label">Net Proceeds</div>
+                                <div className="metric-value">{formatCurrency(metrics.netProceeds)}</div>
+                            </div>
+                            <div className="metric">
+                                <div className="metric-label">Gross Profit</div>
+                                <div className={`metric-value ${metrics.grossProfit > 0 ? 'positive' : 'negative'}`}>
+                                    {formatCurrency(metrics.grossProfit)}
+                                </div>
+                            </div>
+                            <div className="metric">
+                                <div className="metric-label">Overall ROI</div>
+                                <div className={`metric-value ${metrics.overallROI > 0 ? 'positive' : 'negative'}`}>
+                                    {formatPercent(metrics.overallROI)}
+                                </div>
+                            </div>
+                            <div className="metric">
+                                <div className="metric-label">Investor ROI</div>
+                                <div className={`metric-value ${metrics.investorROI >= 0.15 ? 'positive' : 'negative'}`}>
+                                    {formatPercent(metrics.investorROI)}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Profit Distribution Waterfall */}
+                    <div className="card">
+                        <h2>Profit Distribution Waterfall</h2>
+                        <table className="distribution-table">
+                            <thead>
+                                <tr>
+                                    <th>Priority</th>
+                                    <th>Recipient</th>
+                                    <th>Description</th>
+                                    <th style={{textAlign: 'right'}}>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>0</td>
+                                    <td><strong>Selling Costs</strong></td>
+                                    <td>Total transaction costs (7%)</td>
+                                    <td className="amount" style={{textAlign: 'right'}}>-{formatCurrency(metrics.sellingCosts)}</td>
+                                </tr>
+                                <tr style={{background: '#e3f2fd'}}>
+                                    <td></td>
+                                    <td><strong>Edmund (Commission)</strong></td>
+                                    <td>6% listing commission (within selling costs)</td>
+                                    <td className="amount" style={{textAlign: 'right', color: '#00a000'}}>
+                                        {formatCurrency(metrics.edmundCommission)}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>1</td>
+                                    <td><strong>Investors</strong></td>
+                                    <td>Return of capital</td>
+                                    <td className="amount" style={{textAlign: 'right'}}>{formatCurrency(metrics.totalCapital)}</td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td><strong>Investors</strong></td>
+                                    <td>15% total return</td>
+                                    <td className="amount" style={{textAlign: 'right'}}>
+                                        {formatCurrency(Math.min(metrics.investorPreferredReturn, Math.max(0, metrics.netProceeds - metrics.totalCapital)))}
+                                    </td>
+                                </tr>
+                                {!meetsInvestorReturn && (
+                                    <tr style={{background: '#fff3cd'}}>
+                                        <td></td>
+                                        <td><strong>Shortfall</strong></td>
+                                        <td>Unable to meet investor return</td>
+                                        <td className="amount" style={{textAlign: 'right', color: '#d32f2f'}}>
+                                            -{formatCurrency(Math.abs(metrics.shortfall))}
+                                        </td>
+                                    </tr>
+                                )}
+                                {metrics.remainingProfit > 0 && (
+                                    <>
+                                        <tr style={{background: '#f0f0f0'}}>
+                                            <td>3</td>
+                                            <td colSpan="2"><strong>Remaining Profit for Distribution</strong></td>
+                                            <td className="amount" style={{textAlign: 'right', color: '#00a000'}}>
+                                                {formatCurrency(metrics.remainingProfit)}
+                                            </td>
+                                        </tr>
+                                        <tr style={{background: '#e3f2fd'}}>
+                                            <td></td>
+                                            <td><strong>Edmund</strong></td>
+                                            <td>10% carried interest</td>
+                                            <td className="amount" style={{textAlign: 'right', color: '#00a000'}}>
+                                                {formatCurrency(metrics.edmundCarriedProfit)}
+                                            </td>
+                                        </tr>
+                                        <tr style={{background: '#f3e5f5'}}>
+                                            <td></td>
+                                            <td><strong>Builder</strong></td>
+                                            <td>10% carried interest</td>
+                                            <td className="amount" style={{textAlign: 'right', color: '#00a000'}}>
+                                                {formatCurrency(metrics.builderCarriedProfit)}
+                                            </td>
+                                        </tr>
+                                        <tr style={{background: '#e8f5e9'}}>
+                                            <td></td>
+                                            <td><strong>Investors</strong></td>
+                                            <td>80% carried interest</td>
+                                            <td className="amount" style={{textAlign: 'right', color: '#00a000'}}>
+                                                {formatCurrency(metrics.investorCarriedProfit)}
+                                            </td>
+                                        </tr>
+                                    </>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Total Compensation Summary */}
+                    <div className="card">
+                        <h2>Total Compensation Summary</h2>
+                        <div className="metrics-grid">
+                            <div className="metric" style={{borderLeftColor: '#00a8e1'}}>
+                                <div className="metric-label">Investors Total</div>
+                                <div className="metric-value">{formatCurrency(metrics.investorTotal)}</div>
+                                <div style={{fontSize: '14px', color: '#666', marginTop: '8px'}}>
+                                    {formatPercent(metrics.investorROI)} return
+                                </div>
+                            </div>
+                            <div className="metric" style={{borderLeftColor: '#1a3e5c'}}>
+                                <div className="metric-label">Edmund Total</div>
+                                <div className="metric-value">{formatCurrency(metrics.edmundTotal)}</div>
+                                <div style={{fontSize: '14px', color: '#666', marginTop: '8px'}}>
+                                    Commission: {formatCurrency(metrics.edmundCommission)}<br/>
+                                    Carried Interest: {formatCurrency(metrics.edmundCarriedProfit)}
+                                </div>
+                            </div>
+                            <div className="metric" style={{borderLeftColor: '#7b1fa2'}}>
+                                <div className="metric-label">Builder Total</div>
+                                <div className="metric-value">{formatCurrency(metrics.builderTotal)}</div>
+                                <div style={{fontSize: '14px', color: '#666', marginTop: '8px'}}>
+                                    10% carried interest
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Key Insights */}
+                    <div className="card">
+                        <h2>Key Insights</h2>
+                        <div style={{lineHeight: '1.8'}}>
+                            <p><strong>Breakeven Sale Price:</strong> {formatCurrency(breakeven)}</p>
+                            <p><strong>Current Price vs. Breakeven:</strong> {salePrice >= breakeven ?
+                                <span style={{color: '#00a000'}}>+{formatCurrency(salePrice - breakeven)} above breakeven ✓</span> :
+                                <span style={{color: '#d32f2f'}}>{formatCurrency(breakeven - salePrice)} below breakeven ⚠️</span>
+                            }</p>
+                            <p><strong>Timeline:</strong> {DEAL_PARAMS.buildMonths} months construction + {DEAL_PARAMS.sellMonths} months to sell = {DEAL_PARAMS.buildMonths + DEAL_PARAMS.sellMonths} months total</p>
+                            <p><strong>Edmund's Dual Compensation:</strong></p>
+                            <ul style={{marginLeft: '20px', marginTop: '8px'}}>
+                                <li>Listing commission ({formatPercent(DEAL_PARAMS.edmundCommissionPct)}) paid from selling costs</li>
+                                <li>Carried interest ({formatPercent(DEAL_PARAMS.edmundCarriedInterest)}) from remaining profits after investor returns</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    {/* About the Development Team */}
+                    <div className="card">
+                        <h2>About the Development Team</h2>
+                        <div className="team-section">
+                            <div className="team-member">
+                                <div className="team-member-header">
+                                    <h3>Edmund Bogen</h3>
+                                    <p>The Edmund Bogen Team | Douglas Elliman Real Estate</p>
+                                </div>
+                                <div className="team-member-body">
+                                    <p>Edmund Bogen is an accomplished luxury real estate broker specializing in South Florida's most prestigious communities, with particular expertise in country club and gated properties from Miami Beach to Palm Beach. As a resident of St. Andrews Country Club, Edmund brings intimate knowledge of the luxury lifestyle and community dynamics that define South Florida's premium real estate market.</p>
+
+                                    <h4>Entrepreneurial Foundation</h4>
+                                    <p>Before entering real estate, Edmund built and scaled a successful public relations company in New York City from a solo practice to over 30 employees. This entrepreneurial success provided him with both the capital and business acumen that would later distinguish his real estate career. Following his exit from the PR industry, he strategically invested in properties across New York City, Maryland, and Indiana, gaining valuable experience as a real estate investor before transitioning to brokerage.</p>
+
+                                    <h4>Real Estate Achievements</h4>
+                                    <p>Edmund's deep understanding of luxury markets has resulted in exceptional outcomes for his clients, including the record-breaking sale of the highest-priced resale in Boca West Country Club history. His systematic approach to transactions and keen market insights have established him as a trusted advisor for high-net-worth individuals navigating complex luxury property acquisitions and sales.</p>
+
+                                    <h4>Market Expertise</h4>
+                                    <p>Having personally relocated his family from New York City to Boca Raton, Edmund understands the South Florida relocation process from his clients' perspective. He serves the entire luxury corridor from Miami Beach through Palm Beach, with specialized knowledge of neighborhood dynamics, schools, and the service provider network essential to luxury homeowners. His educational background includes a Bachelor's degree in Communications from Adelphi University and advanced real estate studies at NYU's Schack Institute of Real Estate.</p>
+
+                                    <h4>The Edmund Bogen Team</h4>
+                                    <p>As a top-performing agent at Douglas Elliman Real Estate, Edmund leads a dedicated team of professionals committed to delivering superior service and personalized attention throughout every transaction. His business model emphasizes strategic marketing, comprehensive market intelligence, and the seamless execution that luxury clients expect and deserve.</p>
+                                </div>
+                            </div>
+
+                            <div className="team-member placeholder">
+                                <div className="team-member-header">
+                                    <h3>Builder Partner</h3>
+                                    <p>Luxury Construction & Development</p>
+                                </div>
+                                <div className="team-member-body">
+                                    <p>Builder biography and credentials will be added here.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="alert alert-info" style={{marginTop: '30px'}}>
+                            <strong>A Packaged Development Solution</strong><br/>
+                            This investment opportunity brings together experienced real estate expertise and proven luxury construction capabilities. Edmund Bogen identifies premium development opportunities and manages the transaction and marketing process, while our builder partner delivers exceptional construction quality and project management. Together, we provide investors with a turnkey solution for luxury real estate development at St Andrews Country Club.
+                        </div>
+                    </div>
+
+                    <div style={{textAlign: 'center', padding: '40px 0', color: '#666', fontSize: '14px'}}>
+                        <p>Generated by Edmund Bogen | St Andrews Investment Analysis Tool</p>
+                        <p style={{marginTop: '8px'}}>This analysis is for informational purposes only and does not constitute investment advice.</p>
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
