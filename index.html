@@ -440,7 +440,7 @@
 
             // Exit calculations
             const sellingCosts = salePrice * p.sellingCostsPct;
-            const edmundCommission = salePrice * p.edmundCommissionPct;
+            const realtorCommissions = salePrice * p.edmundCommissionPct; // Total buyer + seller agent commissions
             const netProceeds = salePrice - sellingCosts + p.refundableDeposit;
             const grossProfit = netProceeds - totalCapital;
 
@@ -454,7 +454,7 @@
 
             // Total distributions
             const investorTotal = totalCapital + investorProfitShare;
-            const edmundTotal = edmundCommission + edmundCarriedInterest;
+            const edmundTotal = edmundCarriedInterest; // Edmund's actual profit (carried interest only)
             const builderTotal = builderCarriedInterest;
 
             // Investor return analysis
@@ -473,7 +473,7 @@
                 totalCarrying,
                 salePrice,
                 sellingCosts,
-                edmundCommission,
+                realtorCommissions,
                 netProceeds,
                 grossProfit,
                 carriedInterestTotal,
@@ -769,10 +769,10 @@
                                     <td className="amount" style={{textAlign: 'right'}}>-{formatCurrency(metrics.sellingCosts)}</td>
                                 </tr>
                                 <tr style={{background: '#e3f2fd'}}>
-                                    <td style={{paddingLeft: '20px', fontStyle: 'italic'}}>Edmund's Commission</td>
-                                    <td style={{fontStyle: 'italic'}}>6% listing commission</td>
-                                    <td className="amount" style={{textAlign: 'right', color: '#00a000', fontStyle: 'italic'}}>
-                                        {formatCurrency(metrics.edmundCommission)}
+                                    <td style={{paddingLeft: '20px', fontStyle: 'italic'}}>Realtor Commissions</td>
+                                    <td style={{fontStyle: 'italic'}}>6% total (buyer + seller agents)</td>
+                                    <td className="amount" style={{textAlign: 'right', fontStyle: 'italic'}}>
+                                        {formatCurrency(metrics.realtorCommissions)}
                                     </td>
                                 </tr>
                                 <tr>
@@ -842,8 +842,8 @@
                                     </tr>
                                 )}
                                 <tr style={{background: '#e3f2fd'}}>
-                                    <td><strong>Edmund Total</strong></td>
-                                    <td>Commission + carried interest</td>
+                                    <td><strong>Edmund Profit</strong></td>
+                                    <td>Carried interest (5% of profit)</td>
                                     <td className="amount" style={{textAlign: 'right', color: '#00a000'}}>
                                         {formatCurrency(metrics.edmundTotal)}
                                     </td>
@@ -871,11 +871,10 @@
                                 </div>
                             </div>
                             <div className="metric" style={{borderLeftColor: '#1a3e5c'}}>
-                                <div className="metric-label">Edmund Total</div>
+                                <div className="metric-label">Edmund Profit</div>
                                 <div className="metric-value">{formatCurrency(metrics.edmundTotal)}</div>
                                 <div style={{fontSize: '14px', color: '#666', marginTop: '8px'}}>
-                                    Commission: {formatCurrency(metrics.edmundCommission)}<br/>
-                                    Carried Interest: {formatCurrency(metrics.edmundCarriedInterest)}
+                                    5% carried interest only
                                 </div>
                             </div>
                             <div className="metric" style={{borderLeftColor: '#7b1fa2'}}>
@@ -911,7 +910,7 @@
                                 <li>Gross profit = Net proceeds - Investor capital</li>
                                 <li>Carried interest (10% of profit): 5% Edmund, 5% Builder</li>
                                 <li>Investor profit share: 90% of gross profit + return of capital</li>
-                                <li>Edmund also receives 6% listing commission from selling costs</li>
+                                <li>6% realtor commissions (buyer + seller agents) included in selling costs</li>
                             </ul>
                             <p style={{marginTop: '15px'}}><strong>Note:</strong> True breakeven = capital recovery (0% return). 15% return is the investor target goal, not a requirement. Use the slider to explore different sale price scenarios.</p>
                         </div>
