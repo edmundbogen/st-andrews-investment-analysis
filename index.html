@@ -378,11 +378,11 @@
         // Financial constants
         const DEAL_PARAMS = {
             purchasePrice: 2000000,
-            clubDeposit: 500000,
-            refundableDeposit: 250000,
+            clubDeposit: 150000, // Builder's Program deposit
+            refundableDeposit: 75000, // 50% refundable at sale (3-year window)
             closingCostsPct: 0.035,
             dueDiligence: 7500,
-            buildCostPerSqFt: 500,
+            buildCostPerSqFt: 600, // Updated to $600/sf for luxury build
             homeSize: 7000,
             contingencyPct: 0.12,
             architectPct: 0.06,
@@ -557,6 +557,7 @@
                         <img src="property.jpg" alt="St Andrews Luxury Development Opportunity" />
                         <div className="property-caption">
                             <h3>St Andrews Country Club Development Opportunity</h3>
+                            <p style={{fontSize: '14px', marginTop: '8px', opacity: '0.9'}}>Builder's Program: $150,000 deposit ($75K refundable within 3 years of sale)</p>
                         </div>
                     </div>
 
@@ -770,14 +771,21 @@
                                 </tr>
                                 <tr>
                                     <td><strong>Less: Selling Costs</strong></td>
-                                    <td>7% of sale price</td>
+                                    <td>7% total (conservative estimate)</td>
                                     <td className="amount" style={{textAlign: 'right'}}>-{formatCurrency(metrics.sellingCosts)}</td>
                                 </tr>
                                 <tr style={{background: '#e3f2fd'}}>
                                     <td style={{paddingLeft: '20px', fontStyle: 'italic'}}>Realtor Commissions</td>
-                                    <td style={{fontStyle: 'italic'}}>6% total (buyer + seller agents)</td>
+                                    <td style={{fontStyle: 'italic'}}>6% (buyer + seller agents)</td>
                                     <td className="amount" style={{textAlign: 'right', fontStyle: 'italic'}}>
                                         {formatCurrency(metrics.realtorCommissions)}
+                                    </td>
+                                </tr>
+                                <tr style={{background: '#e3f2fd'}}>
+                                    <td style={{paddingLeft: '20px', fontStyle: 'italic'}}>Other Closing Costs</td>
+                                    <td style={{fontStyle: 'italic'}}>1% (title, escrow, transfer taxes)</td>
+                                    <td className="amount" style={{textAlign: 'right', fontStyle: 'italic'}}>
+                                        {formatCurrency(metrics.sellingCosts - metrics.realtorCommissions)}
                                     </td>
                                 </tr>
                                 <tr>
