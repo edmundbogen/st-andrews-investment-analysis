@@ -385,8 +385,8 @@
             buildCostPerSqFt: 600, // Updated to $600/sf for luxury build
             homeSize: 7000,
             contingencyPct: 0.12,
-            architectPct: 0.06,
-            permitsAndFees: 150000,
+            architectFees: 150000, // Fixed architect fee
+            permitsAndFees: 80000,
             clubDuesAnnual: 70000,
             propertyTaxPct: 0.018,
             insurancePct: 0.0075,
@@ -425,7 +425,7 @@
             // Development costs
             const buildCost = p.buildCostPerSqFt * p.homeSize;
             const contingency = buildCost * p.contingencyPct;
-            const architect = buildCost * p.architectPct;
+            const architect = p.architectFees;
             const totalDevelopment = buildCost + contingency + architect + p.permitsAndFees;
 
             // Carrying costs
@@ -631,7 +631,7 @@
                                     <span>{formatCurrency(metrics.breakdown.development.contingency)}</span>
                                 </div>
                                 <div className="cost-item">
-                                    <span>Architect/Engineering (6%)</span>
+                                    <span>Architect/Engineering</span>
                                     <span>{formatCurrency(metrics.breakdown.development.architect)}</span>
                                 </div>
                                 <div className="cost-item">
