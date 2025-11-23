@@ -453,7 +453,12 @@
             const investorProfitShare = Math.max(0, grossProfit * 0.90);
 
             // Total distributions
-            const investorTotal = totalCapital + investorProfitShare;
+            // If there's a loss (negative profit), investors only get net proceeds available
+            // If there's a profit, investors get capital back + their 90% profit share
+            const investorTotal = grossProfit >= 0
+                ? totalCapital + investorProfitShare
+                : netProceeds - carriedInterestTotal;
+
             const edmundTotal = edmundCarriedInterest; // Edmund's actual profit (carried interest only)
             const builderTotal = builderCarriedInterest;
 
