@@ -514,8 +514,20 @@
         function App() {
             const [salePrice, setSalePrice] = useState(8250000);
             const metrics = useMemo(() => calculateDealMetrics(salePrice), [salePrice]);
-            const breakeven = useMemo(() => {
-                // Binary search for breakeven price where investors get capital + 15% return
+            // True breakeven: investors get capital back (0% return)
+            const trueBreakeven = useMemo(() => {
+                let low = 6000000, high = 10000000;
+                while (high - low > 1000) {
+                    const mid = (low + high) / 2;
+                    const m = calculateDealMetrics(mid);
+                    if (m.investorTotal < m.totalCapital) low = mid;
+                    else high = mid;
+                }
+                return high;
+            }, []);
+
+            // 15% return target: investors get capital + 15% return
+            const targetReturn = useMemo(() => {
                 let low = 7000000, high = 15000000;
                 while (high - low > 1000) {
                     const mid = (low + high) / 2;
@@ -556,12 +568,18 @@
                                 <div className="metric-value">{DEAL_PARAMS.buildMonths + DEAL_PARAMS.sellMonths} Months</div>
                             </div>
                             <div className="metric">
-                                <div className="metric-label">Breakeven Sale Price</div>
-                                <div className="metric-value">{formatCurrency(breakeven)}</div>
+                                <div className="metric-label">True Breakeven</div>
+                                <div className="metric-value">{formatCurrency(trueBreakeven)}</div>
+                                <div style={{fontSize: '12px', color: '#666', marginTop: '5px'}}>
+                                    Capital recovery (0% return)
+                                </div>
                             </div>
                             <div className="metric">
-                                <div className="metric-label">Investor Return Target</div>
-                                <div className="metric-value">{formatPercent(DEAL_PARAMS.investorReturnPct)} Total</div>
+                                <div className="metric-label">15% Return Target</div>
+                                <div className="metric-value">{formatCurrency(targetReturn)}</div>
+                                <div style={{fontSize: '12px', color: '#666', marginTop: '5px'}}>
+                                    Investor target goal
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -668,9 +686,15 @@
                             </div>
                         </div>
 
-                        {salePrice >= breakeven - 50000 && salePrice <= breakeven + 50000 && (
+                        {salePrice >= trueBreakeven - 50000 && salePrice <= trueBreakeven + 50000 && (
+                            <div className="breakeven-marker" style={{background: '#666'}}>
+                                ⚖️ TRUE BREAKEVEN - Investors receive capital back (0% return)
+                            </div>
+                        )}
+
+                        {salePrice >= targetReturn - 50000 && salePrice <= targetReturn + 50000 && (
                             <div className="breakeven-marker">
-                                ⚖️ BREAKEVEN POINT - Investors receive capital + 15% return, $0 remaining profit
+                                🎯 15% RETURN TARGET - Investors achieve target return goal
                             </div>
                         )}
 
@@ -868,11 +892,19 @@
                     <div className="card">
                         <h2>Key Insights</h2>
                         <div style={{lineHeight: '1.8'}}>
-                            <p><strong>Breakeven Sale Price:</strong> {formatCurrency(breakeven)}</p>
-                            <p><strong>Current Price vs. Breakeven:</strong> {salePrice >= breakeven ?
-                                <span style={{color: '#00a000'}}>+{formatCurrency(salePrice - breakeven)} above breakeven ✓</span> :
-                                <span style={{color: '#d32f2f'}}>{formatCurrency(breakeven - salePrice)} below breakeven ⚠️</span>
-                            }</p>
+                            <p><strong>True Breakeven (Capital Recovery):</strong> {formatCurrency(trueBreakeven)}</p>
+                            <p><strong>15% Return Target:</strong> {formatCurrency(targetReturn)}</p>
+                            <p><strong>Current Price Status:</strong></p>
+                            <ul style={{marginLeft: '20px', marginTop: '8px'}}>
+                                <li>vs. True Breakeven: {salePrice >= trueBreakeven ?
+                                    <span style={{color: '#00a000'}}>+{formatCurrency(salePrice - trueBreakeven)} above ✓</span> :
+                                    <span style={{color: '#d32f2f'}}>{formatCurrency(trueBreakeven - salePrice)} below ⚠️</span>
+                                }</li>
+                                <li>vs. 15% Target: {salePrice >= targetReturn ?
+                                    <span style={{color: '#00a000'}}>+{formatCurrency(salePrice - targetReturn)} above target ✓</span> :
+                                    <span style={{color: '#d32f2f'}}>{formatCurrency(targetReturn - salePrice)} below target ⚠️</span>
+                                }</li>
+                            </ul>
                             <p><strong>Timeline:</strong> {DEAL_PARAMS.buildMonths} months construction + {DEAL_PARAMS.sellMonths} months to sell = {DEAL_PARAMS.buildMonths + DEAL_PARAMS.sellMonths} months total</p>
                             <p><strong>Profit Distribution Structure:</strong></p>
                             <ul style={{marginLeft: '20px', marginTop: '8px'}}>
@@ -881,7 +913,7 @@
                                 <li>Investor profit share: 90% of gross profit + return of capital</li>
                                 <li>Edmund also receives 6% listing commission from selling costs</li>
                             </ul>
-                            <p style={{marginTop: '15px'}}><strong>Note:</strong> Breakeven represents sale price where investors achieve their 15% return target after carried interest is deducted.</p>
+                            <p style={{marginTop: '15px'}}><strong>Note:</strong> True breakeven = capital recovery (0% return). 15% return is the investor target goal, not a requirement. Use the slider to explore different sale price scenarios.</p>
                         </div>
                     </div>
 
