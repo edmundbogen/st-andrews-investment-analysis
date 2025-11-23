@@ -322,6 +322,34 @@
             color: #666;
         }
 
+        .property-showcase {
+            margin-bottom: 40px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .property-showcase img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .property-caption {
+            background: #1a3e5c;
+            color: white;
+            padding: 20px 30px;
+            text-align: center;
+        }
+
+        .property-caption h3 {
+            font-size: 24px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            margin: 0;
+            text-transform: uppercase;
+        }
+
         @media (max-width: 768px) {
             .cost-breakdown {
                 grid-template-columns: 1fr;
@@ -501,6 +529,14 @@
                     <div className="header">
                         <h1>St Andrews Investment Analysis</h1>
                         <p>Luxury Development ROI Calculator | Edmund Bogen Team</p>
+                    </div>
+
+                    {/* Property Showcase */}
+                    <div className="property-showcase">
+                        <img src="property.jpg" alt="St Andrews Luxury Development Opportunity" />
+                        <div className="property-caption">
+                            <h3>St Andrews Country Club Development Opportunity</h3>
+                        </div>
                     </div>
 
                     {/* Deal Summary */}
