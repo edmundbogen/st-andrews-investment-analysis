@@ -414,36 +414,9 @@
             return (value * 100).toFixed(2) + '%';
         }
 
-        // Calculate IRR using Newton-Raphson method
-        function calculateIRR(cashFlows) {
-            const maxIterations = 100;
-            const tolerance = 0.00001;
-            let guess = 0.1; // Start with 10% guess
-
-            for (let i = 0; i < maxIterations; i++) {
-                let npv = 0;
-                let dnpv = 0;
-
-                for (let t = 0; t < cashFlows.length; t++) {
-                    npv += cashFlows[t] / Math.pow(1 + guess, t / 12); // Monthly periods
-                    dnpv += (-t / 12) * cashFlows[t] / Math.pow(1 + guess, (t / 12) + 1);
-                }
-
-                const newGuess = guess - npv / dnpv;
-
-                if (Math.abs(newGuess - guess) < tolerance) {
-                    return newGuess;
-                }
-
-                guess = newGuess;
-            }
-
-            return guess; // Return best guess after max iterations
-        }
-
-        function calculateDealMetrics(salePrice, buildCostPerSf = DEAL_PARAMS.buildCostPerSqFt, timelineMonths = null) {
+        function calculateDealMetrics(salePrice, buildCostPerSf = DEAL_PARAMS.buildCostPerSqFt) {
             const p = { ...DEAL_PARAMS, buildCostPerSqFt: buildCostPerSf };
-            const totalMonths = timelineMonths || (p.buildMonths + p.sellMonths);
+            const totalMonths = p.buildMonths + p.sellMonths;
 
             // Acquisition costs
             const closingCosts = p.purchasePrice * p.closingCostsPct;
@@ -498,26 +471,7 @@
             const investorROI = investorProfitShare / totalCapital;
             const overallROI = grossProfit / totalCapital;
 
-            // IRR Calculation - Build cash flow array
-            const monthlyCarryingCost = totalCarrying / totalMonths;
-            const cashFlows = [];
-
-            // Month 0: Initial capital outlay (negative)
-            cashFlows.push(-totalCapital);
-
-            // Months 1 through totalMonths-1: Monthly carrying costs (negative)
-            for (let i = 1; i < totalMonths; i++) {
-                cashFlows.push(-monthlyCarryingCost);
-            }
-
-            // Final month: Exit proceeds (positive)
-            cashFlows.push(investorTotal - monthlyCarryingCost);
-
-            const irr = calculateIRR(cashFlows);
-            const irrAnnualized = irr;
-
             return {
-                totalMonths,
                 totalCapital,
                 totalAcquisition,
                 totalDevelopment,
@@ -539,8 +493,6 @@
                 investorTotal,
                 investorROI,
                 overallROI,
-                irr,
-                irrAnnualized,
                 breakdown: {
                     acquisition: {
                         purchasePrice: p.purchasePrice,
@@ -608,85 +560,6 @@
                         <div className="property-caption">
                             <h3>St Andrews Country Club Development Opportunity</h3>
                             <p style={{fontSize: '16px', marginTop: '10px', opacity: '0.95', letterSpacing: '1px'}}>17651 Foxborough Lane</p>
-                        </div>
-                    </div>
-
-                    {/* Executive Summary */}
-                    <div className="card" style={{background: 'linear-gradient(to bottom right, #f8f9fa 0%, #e9ecef 100%)', border: '2px solid #00a8e1'}}>
-                        <h2 style={{borderBottom: '3px solid #1a3e5c'}}>Executive Summary</h2>
-                        <div style={{lineHeight: '1.8'}}>
-                            <p style={{fontSize: '16px', marginBottom: '20px', color: '#1a3e5c', fontWeight: '500'}}>
-                                Luxury new construction development opportunity at St Andrews Country Club in Boca Raton, Florida.
-                                7,000 square foot modern residence with projected exit valuation of $9.0M based on professional
-                                comparative market analysis.
-                            </p>
-
-                            <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px', marginBottom: '25px'}}>
-                                <div style={{padding: '15px', background: 'white', borderRadius: '6px', borderLeft: '4px solid #00a000'}}>
-                                    <div style={{fontSize: '13px', color: '#666', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '5px'}}>
-                                        Investment Structure
-                                    </div>
-                                    <div style={{fontSize: '18px', fontWeight: '600', color: '#1a3e5c'}}>
-                                        90/10 Profit Split
-                                    </div>
-                                    <div style={{fontSize: '13px', color: '#666', marginTop: '5px'}}>
-                                        90% investors, 10% carried interest
-                                    </div>
-                                </div>
-
-                                <div style={{padding: '15px', background: 'white', borderRadius: '6px', borderLeft: '4px solid #00a8e1'}}>
-                                    <div style={{fontSize: '13px', color: '#666', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '5px'}}>
-                                        Base Case IRR
-                                    </div>
-                                    <div style={{fontSize: '18px', fontWeight: '600', color: '#1a3e5c'}}>
-                                        {formatPercent(metrics.irr)}
-                                    </div>
-                                    <div style={{fontSize: '13px', color: '#666', marginTop: '5px'}}>
-                                        22-month timeline
-                                    </div>
-                                </div>
-
-                                <div style={{padding: '15px', background: 'white', borderRadius: '6px', borderLeft: '4px solid #7b1fa2'}}>
-                                    <div style={{fontSize: '13px', color: '#666', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '5px'}}>
-                                        Projected Profit
-                                    </div>
-                                    <div style={{fontSize: '18px', fontWeight: '600', color: metrics.grossProfit > 0 ? '#00a000' : '#d32f2f'}}>
-                                        {formatCurrency(metrics.grossProfit)}
-                                    </div>
-                                    <div style={{fontSize: '13px', color: '#666', marginTop: '5px'}}>
-                                        At $9M exit price
-                                    </div>
-                                </div>
-
-                                <div style={{padding: '15px', background: 'white', borderRadius: '6px', borderLeft: '4px solid #f57c00'}}>
-                                    <div style={{fontSize: '13px', color: '#666', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '5px'}}>
-                                        Market Support
-                                    </div>
-                                    <div style={{fontSize: '18px', fontWeight: '600', color: '#1a3e5c'}}>
-                                        $8.5M - $9.5M
-                                    </div>
-                                    <div style={{fontSize: '13px', color: '#666', marginTop: '5px'}}>
-                                        CMA value range
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div style={{background: 'white', padding: '20px', borderRadius: '8px', marginBottom: '20px'}}>
-                                <h3 style={{color: '#1a3e5c', fontSize: '16px', marginBottom: '15px'}}>Investment Highlights</h3>
-                                <ul style={{marginLeft: '20px', lineHeight: '1.9'}}>
-                                    <li><strong>Prime Location:</strong> Foxborough Lane, St Andrews Country Club - same street as recent $13.16M sale (1 day DOM)</li>
-                                    <li><strong>Market-Tested Pricing:</strong> $9M exit supported by 4 comparable sales, professional CMA valuation</li>
-                                    <li><strong>Rapid Absorption:</strong> Comparable properties selling in 10-21 days when priced correctly</li>
-                                    <li><strong>Builder's Program:</strong> $150K deposit ($75K refundable) reduces upfront capital requirement</li>
-                                    <li><strong>Risk Mitigation:</strong> 12% contingency, fixed architect fees, locked material pricing</li>
-                                    <li><strong>Experienced Team:</strong> Edmund Bogen (St Andrews resident, record-breaking sales) + established luxury builder</li>
-                                </ul>
-                            </div>
-
-                            <div style={{background: '#fff3cd', padding: '15px', borderRadius: '6px', borderLeft: '4px solid #ffc107'}}>
-                                <strong>Key Risk Factors:</strong> Construction timeline delays, market absorption risk, interest rate sensitivity,
-                                luxury market volatility. See detailed risk scenarios and mitigation strategies in Timeline & IRR Analysis section below.
-                            </div>
                         </div>
                     </div>
 
@@ -931,42 +804,21 @@
                                 </tr>
                                 <tr>
                                     <td><strong>Less: Selling Costs</strong></td>
-                                    <td>7% total (detailed breakdown below)</td>
+                                    <td>7% total (conservative estimate)</td>
                                     <td className="amount" style={{textAlign: 'right'}}>-{formatCurrency(metrics.sellingCosts)}</td>
                                 </tr>
                                 <tr style={{background: '#e3f2fd'}}>
-                                    <td style={{paddingLeft: '30px', fontStyle: 'italic'}}>Buyer's Agent Commission</td>
-                                    <td style={{fontStyle: 'italic'}}>3%</td>
+                                    <td style={{paddingLeft: '20px', fontStyle: 'italic'}}>Realtor Commissions</td>
+                                    <td style={{fontStyle: 'italic'}}>6% (buyer + seller agents)</td>
                                     <td className="amount" style={{textAlign: 'right', fontStyle: 'italic'}}>
-                                        {formatCurrency(metrics.salePrice * 0.03)}
+                                        {formatCurrency(metrics.realtorCommissions)}
                                     </td>
                                 </tr>
                                 <tr style={{background: '#e3f2fd'}}>
-                                    <td style={{paddingLeft: '30px', fontStyle: 'italic'}}>Seller's Agent Commission</td>
-                                    <td style={{fontStyle: 'italic'}}>3%</td>
+                                    <td style={{paddingLeft: '20px', fontStyle: 'italic'}}>Other Closing Costs</td>
+                                    <td style={{fontStyle: 'italic'}}>1% (title, escrow, transfer taxes)</td>
                                     <td className="amount" style={{textAlign: 'right', fontStyle: 'italic'}}>
-                                        {formatCurrency(metrics.salePrice * 0.03)}
-                                    </td>
-                                </tr>
-                                <tr style={{background: '#e3f2fd'}}>
-                                    <td style={{paddingLeft: '30px', fontStyle: 'italic'}}>Title Insurance & Escrow</td>
-                                    <td style={{fontStyle: 'italic'}}>0.5%</td>
-                                    <td className="amount" style={{textAlign: 'right', fontStyle: 'italic'}}>
-                                        {formatCurrency(metrics.salePrice * 0.005)}
-                                    </td>
-                                </tr>
-                                <tr style={{background: '#e3f2fd'}}>
-                                    <td style={{paddingLeft: '30px', fontStyle: 'italic'}}>Transfer Taxes & Recording</td>
-                                    <td style={{fontStyle: 'italic'}}>0.3%</td>
-                                    <td className="amount" style={{textAlign: 'right', fontStyle: 'italic'}}>
-                                        {formatCurrency(metrics.salePrice * 0.003)}
-                                    </td>
-                                </tr>
-                                <tr style={{background: '#e3f2fd'}}>
-                                    <td style={{paddingLeft: '30px', fontStyle: 'italic'}}>Attorney & Closing Fees</td>
-                                    <td style={{fontStyle: 'italic'}}>0.2%</td>
-                                    <td className="amount" style={{textAlign: 'right', fontStyle: 'italic'}}>
-                                        {formatCurrency(metrics.salePrice * 0.002)}
+                                        {formatCurrency(metrics.sellingCosts - metrics.realtorCommissions)}
                                     </td>
                                 </tr>
                                 <tr>
@@ -1110,245 +962,6 @@
                         </div>
                     </div>
 
-                    {/* Timeline & IRR Analysis */}
-                    <div className="card">
-                        <h2>Timeline & IRR Analysis</h2>
-                        <div style={{marginBottom: '20px'}}>
-                            <p style={{lineHeight: '1.7', marginBottom: '15px'}}>
-                                Internal Rate of Return (IRR) accounts for the time value of money and provides a more accurate picture
-                                of investment performance than simple ROI. The analysis below shows base case and delay scenarios.
-                            </p>
-                        </div>
-
-                        <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px'}}>
-                            {/* Base Case */}
-                            <div style={{padding: '20px', background: '#e8f5e9', borderRadius: '8px', border: '2px solid #00a000'}}>
-                                <h3 style={{color: '#1a3e5c', marginBottom: '15px', fontSize: '18px'}}>Base Case Scenario</h3>
-                                <div style={{marginBottom: '10px'}}>
-                                    <strong>Timeline:</strong> {metrics.totalMonths} months
-                                    <div style={{fontSize: '14px', color: '#666'}}>
-                                        ({DEAL_PARAMS.buildMonths}mo construction + {DEAL_PARAMS.sellMonths}mo marketing)
-                                    </div>
-                                </div>
-                                <div style={{marginBottom: '10px'}}>
-                                    <strong>IRR:</strong> <span style={{fontSize: '24px', color: '#00a000', fontWeight: '600'}}>
-                                        {formatPercent(metrics.irr)}
-                                    </span>
-                                </div>
-                                <div style={{marginBottom: '10px'}}>
-                                    <strong>Investor ROI:</strong> {formatPercent(metrics.investorROI)}
-                                </div>
-                                <div style={{fontSize: '13px', marginTop: '15px', padding: '10px', background: 'white', borderRadius: '4px'}}>
-                                    On-time completion with normal marketing period
-                                </div>
-                            </div>
-
-                            {/* +4 Month Delay */}
-                            <div style={{padding: '20px', background: '#fff3cd', borderRadius: '8px', border: '2px solid #ffc107'}}>
-                                <h3 style={{color: '#1a3e5c', marginBottom: '15px', fontSize: '18px'}}>+4 Month Delay</h3>
-                                {(() => {
-                                    const delayMetrics = calculateDealMetrics(salePrice, buildCostPerSf, metrics.totalMonths + 4);
-                                    return (
-                                        <>
-                                            <div style={{marginBottom: '10px'}}>
-                                                <strong>Timeline:</strong> {delayMetrics.totalMonths} months
-                                                <div style={{fontSize: '14px', color: '#666'}}>
-                                                    ({DEAL_PARAMS.buildMonths + 4}mo construction + {DEAL_PARAMS.sellMonths}mo marketing)
-                                                </div>
-                                            </div>
-                                            <div style={{marginBottom: '10px'}}>
-                                                <strong>IRR:</strong> <span style={{fontSize: '24px', color: '#f57c00', fontWeight: '600'}}>
-                                                    {formatPercent(delayMetrics.irr)}
-                                                </span>
-                                            </div>
-                                            <div style={{marginBottom: '10px'}}>
-                                                <strong>Investor ROI:</strong> {formatPercent(delayMetrics.investorROI)}
-                                            </div>
-                                            <div style={{marginBottom: '10px'}}>
-                                                <strong>Additional Carry:</strong> {formatCurrency(delayMetrics.totalCarrying - metrics.totalCarrying)}
-                                            </div>
-                                            <div style={{fontSize: '13px', marginTop: '15px', padding: '10px', background: 'white', borderRadius: '4px'}}>
-                                                Permitting delays or material shortages
-                                            </div>
-                                        </>
-                                    );
-                                })()}
-                            </div>
-
-                            {/* +8 Month Delay */}
-                            <div style={{padding: '20px', background: '#ffebee', borderRadius: '8px', border: '2px solid #d32f2f'}}>
-                                <h3 style={{color: '#1a3e5c', marginBottom: '15px', fontSize: '18px'}}>+8 Month Delay</h3>
-                                {(() => {
-                                    const delayMetrics = calculateDealMetrics(salePrice, buildCostPerSf, metrics.totalMonths + 8);
-                                    return (
-                                        <>
-                                            <div style={{marginBottom: '10px'}}>
-                                                <strong>Timeline:</strong> {delayMetrics.totalMonths} months
-                                                <div style={{fontSize: '14px', color: '#666'}}>
-                                                    ({DEAL_PARAMS.buildMonths + 8}mo construction + {DEAL_PARAMS.sellMonths}mo marketing)
-                                                </div>
-                                            </div>
-                                            <div style={{marginBottom: '10px'}}>
-                                                <strong>IRR:</strong> <span style={{fontSize: '24px', color: '#d32f2f', fontWeight: '600'}}>
-                                                    {formatPercent(delayMetrics.irr)}
-                                                </span>
-                                            </div>
-                                            <div style={{marginBottom: '10px'}}>
-                                                <strong>Investor ROI:</strong> {formatPercent(delayMetrics.investorROI)}
-                                            </div>
-                                            <div style={{marginBottom: '10px'}}>
-                                                <strong>Additional Carry:</strong> {formatCurrency(delayMetrics.totalCarrying - metrics.totalCarrying)}
-                                            </div>
-                                            <div style={{fontSize: '13px', marginTop: '15px', padding: '10px', background: 'white', borderRadius: '4px'}}>
-                                                Major delays (weather, labor, design changes)
-                                            </div>
-                                        </>
-                                    );
-                                })()}
-                            </div>
-                        </div>
-
-                        <div className="alert alert-info" style={{marginTop: '20px'}}>
-                            <strong>Timeline Risk Mitigation:</strong> The builder has implemented a detailed project schedule with milestone tracking.
-                            A 12% contingency budget provides cushion for unforeseen delays. All permits are being fast-tracked through St Andrews'
-                            expedited approval process. Material orders have been placed with locked pricing to avoid supply chain disruptions.
-                        </div>
-                    </div>
-
-                    {/* Market Analysis */}
-                    <div className="card">
-                        <h2>Market Analysis - St Andrews Country Club</h2>
-                        <div style={{marginBottom: '25px'}}>
-                            <p style={{lineHeight: '1.7', marginBottom: '15px', fontSize: '15px'}}>
-                                Professional Comparative Market Analysis conducted for 17651 Foxborough Lane establishes strong market support
-                                for the projected exit valuation. Analysis of four comparable new construction sales demonstrates robust demand
-                                for luxury properties at St Andrews Country Club.
-                            </p>
-                        </div>
-
-                        <div className="metrics-grid">
-                            <div className="metric" style={{borderLeftColor: '#00a000'}}>
-                                <div className="metric-label">CMA Recommended Range</div>
-                                <div className="metric-value" style={{fontSize: '20px'}}>$8.5M - $9.5M</div>
-                                <div style={{fontSize: '14px', color: '#666', marginTop: '8px'}}>
-                                    Based on 4 comparable sales
-                                </div>
-                            </div>
-                            <div className="metric" style={{borderLeftColor: '#00a8e1'}}>
-                                <div className="metric-label">Optimal List Price</div>
-                                <div className="metric-value" style={{fontSize: '20px'}}>$9,000,000</div>
-                                <div style={{fontSize: '14px', color: '#666', marginTop: '8px'}}>
-                                    $1,286/SF positioning
-                                </div>
-                            </div>
-                            <div className="metric" style={{borderLeftColor: '#7b1fa2'}}>
-                                <div className="metric-label">Expected Days on Market</div>
-                                <div className="metric-value" style={{fontSize: '20px'}}>15-30 Days</div>
-                                <div style={{fontSize: '14px', color: '#666', marginTop: '8px'}}>
-                                    If priced correctly
-                                </div>
-                            </div>
-                            <div className="metric" style={{borderLeftColor: '#f57c00'}}>
-                                <div className="metric-label">Market $/SF Range</div>
-                                <div className="metric-value" style={{fontSize: '20px'}}>$1,125-$1,573</div>
-                                <div style={{fontSize: '14px', color: '#666', marginTop: '8px'}}>
-                                    New construction comps
-                                </div>
-                            </div>
-                        </div>
-
-                        <div style={{marginTop: '30px'}}>
-                            <h3 style={{color: '#1a3e5c', fontSize: '18px', marginBottom: '15px'}}>Comparable Sales Summary</h3>
-                            <div style={{overflowX: 'auto'}}>
-                                <table style={{width: '100%', borderCollapse: 'collapse', fontSize: '14px'}}>
-                                    <thead>
-                                        <tr style={{background: '#1a3e5c', color: 'white'}}>
-                                            <th style={{padding: '12px', textAlign: 'left'}}>Address</th>
-                                            <th style={{padding: '12px', textAlign: 'right'}}>Sale Price</th>
-                                            <th style={{padding: '12px', textAlign: 'right'}}>Size (SF)</th>
-                                            <th style={{padding: '12px', textAlign: 'right'}}>$/SF</th>
-                                            <th style={{padding: '12px', textAlign: 'center'}}>Waterfront</th>
-                                            <th style={{padding: '12px', textAlign: 'center'}}>DOM</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr style={{background: '#f9f9f9'}}>
-                                            <td style={{padding: '12px'}}>7234 Ayrshire Lane</td>
-                                            <td style={{padding: '12px', textAlign: 'right'}}>$10,500,000</td>
-                                            <td style={{padding: '12px', textAlign: 'right'}}>8,125</td>
-                                            <td style={{padding: '12px', textAlign: 'right'}}>$1,292</td>
-                                            <td style={{padding: '12px', textAlign: 'center'}}>Yes</td>
-                                            <td style={{padding: '12px', textAlign: 'center'}}>21</td>
-                                        </tr>
-                                        <tr>
-                                            <td style={{padding: '12px'}}>17063 Castlebay Court</td>
-                                            <td style={{padding: '12px', textAlign: 'right'}}>$10,250,000</td>
-                                            <td style={{padding: '12px', textAlign: 'right'}}>8,110</td>
-                                            <td style={{padding: '12px', textAlign: 'right'}}>$1,264</td>
-                                            <td style={{padding: '12px', textAlign: 'center'}}>Yes</td>
-                                            <td style={{padding: '12px', textAlign: 'center'}}>10</td>
-                                        </tr>
-                                        <tr style={{background: '#f9f9f9'}}>
-                                            <td style={{padding: '12px'}}>17577 Scarsdale Way</td>
-                                            <td style={{padding: '12px', textAlign: 'right'}}>$5,625,000</td>
-                                            <td style={{padding: '12px', textAlign: 'right'}}>5,000</td>
-                                            <td style={{padding: '12px', textAlign: 'right'}}>$1,125</td>
-                                            <td style={{padding: '12px', textAlign: 'center'}}>No</td>
-                                            <td style={{padding: '12px', textAlign: 'center'}}>20</td>
-                                        </tr>
-                                        <tr style={{background: '#fff3e0'}}>
-                                            <td style={{padding: '12px'}}><strong>17903 Foxborough</strong></td>
-                                            <td style={{padding: '12px', textAlign: 'right'}}><strong>$13,160,000</strong></td>
-                                            <td style={{padding: '12px', textAlign: 'right'}}>8,368</td>
-                                            <td style={{padding: '12px', textAlign: 'right'}}><strong>$1,573</strong></td>
-                                            <td style={{padding: '12px', textAlign: 'center'}}>No</td>
-                                            <td style={{padding: '12px', textAlign: 'center'}}><strong>1</strong></td>
-                                        </tr>
-                                        <tr style={{background: '#e8f5e9'}}>
-                                            <td style={{padding: '12px'}}><strong>Subject Property</strong></td>
-                                            <td style={{padding: '12px', textAlign: 'right'}}><strong>$9,000,000</strong></td>
-                                            <td style={{padding: '12px', textAlign: 'right'}}>7,000</td>
-                                            <td style={{padding: '12px', textAlign: 'right'}}><strong>$1,286</strong></td>
-                                            <td style={{padding: '12px', textAlign: 'center'}}>No</td>
-                                            <td style={{padding: '12px', textAlign: 'center'}}>TBD</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <div className="alert alert-success" style={{marginTop: '25px'}}>
-                            <strong>Critical Market Indicator:</strong> 17903 Foxborough Lane (same street as subject property) went under
-                            contract in just 1 day at $13.16M, demonstrating exceptionally strong demand for premier new construction on
-                            Foxborough Lane. While that property represents the absolute top of the market with ultra-luxury finishes,
-                            it validates pricing power for properly positioned new construction at St Andrews.
-                        </div>
-
-                        <div style={{marginTop: '25px'}}>
-                            <h3 style={{color: '#1a3e5c', fontSize: '18px', marginBottom: '15px'}}>Key Market Insights</h3>
-                            <ul style={{lineHeight: '1.8', marginLeft: '20px'}}>
-                                <li><strong>Non-waterfront new construction</strong> at St Andrews averages $1,349/SF (based on recent comparable sales)</li>
-                                <li><strong>Waterfront premium</strong> averages 22-28% over comparable non-waterfront properties</li>
-                                <li><strong>Properly priced properties</strong> sell in 1-21 days; overpriced listings exceed 90+ days on market</li>
-                                <li><strong>Ultra-luxury segment ($10M+)</strong> showing strong demand with quick absorption rates</li>
-                                <li><strong>Market velocity:</strong> Properties priced correctly are absorbed in under 30 days</li>
-                                <li><strong>Buyer profile:</strong> Ultra-high-net-worth individuals seeking turnkey luxury with modern design</li>
-                            </ul>
-                        </div>
-
-                        <div style={{marginTop: '25px', padding: '20px', background: '#f0f8ff', borderRadius: '8px', borderLeft: '4px solid #00a8e1'}}>
-                            <p style={{lineHeight: '1.7', marginBottom: '10px'}}>
-                                <strong>Professional Market Opinion:</strong> At $9,000,000 ($1,286/SF), the subject property is positioned
-                                14% above the smaller non-waterfront comparable (17577 Scarsdale at $1,125/SF), which is justified by the 40% size
-                                premium. The pricing is also 18% below the waterfront average ($1,278/SF), appropriate for the non-waterfront location,
-                                and 22% below the ultra-luxury comp on the same street, creating a compelling value proposition.
-                            </p>
-                            <p style={{fontSize: '13px', color: '#666', marginTop: '10px'}}>
-                                Source: Comparative Market Analysis prepared by Edmund Bogen, Douglas Elliman Real Estate | November 24, 2025
-                            </p>
-                        </div>
-                    </div>
-
                     {/* About the Development Team */}
                     <div className="card">
                         <h2>About the Development Team</h2>
@@ -1389,132 +1002,6 @@
                         <div className="alert alert-info" style={{marginTop: '30px'}}>
                             <strong>A Packaged Development Solution</strong><br/>
                             This investment opportunity brings together experienced real estate expertise and proven luxury construction capabilities. Edmund Bogen identifies premium development opportunities and manages the transaction and marketing process, while our builder partner delivers exceptional construction quality and project management. Together, we provide investors with a turnkey solution for luxury real estate development at St Andrews Country Club.
-                        </div>
-                    </div>
-
-                    {/* Professional Disclaimer */}
-                    <div className="card" style={{background: '#f9f9f9', border: '2px solid #d32f2f'}}>
-                        <h2 style={{color: '#d32f2f', borderBottomColor: '#d32f2f'}}>Important Legal Disclosures</h2>
-                        <div style={{lineHeight: '1.7', fontSize: '14px'}}>
-                            <p style={{fontWeight: '600', marginBottom: '15px', color: '#1a3e5c'}}>
-                                PLEASE READ THIS DISCLAIMER CAREFULLY BEFORE REVIEWING THIS INVESTMENT ANALYSIS
-                            </p>
-
-                            <h3 style={{fontSize: '15px', color: '#1a3e5c', marginTop: '20px', marginBottom: '10px'}}>
-                                No Offer to Sell Securities
-                            </h3>
-                            <p style={{marginBottom: '15px'}}>
-                                This analysis does not constitute an offer to sell, or a solicitation of an offer to buy, any securities.
-                                Any such offer or solicitation will be made only by means of a formal offering memorandum or private placement
-                                memorandum, which will contain detailed information about the investment, the sponsor, and the associated risks.
-                                This document is for informational and discussion purposes only.
-                            </p>
-
-                            <h3 style={{fontSize: '15px', color: '#1a3e5c', marginTop: '20px', marginBottom: '10px'}}>
-                                Forward-Looking Statements
-                            </h3>
-                            <p style={{marginBottom: '15px'}}>
-                                This analysis contains forward-looking statements regarding projected returns, timelines, costs, and market conditions.
-                                These projections are based on assumptions that may or may not prove accurate. <strong>Actual results may differ
-                                materially</strong> from those projected due to construction delays, cost overruns, market changes, interest rate
-                                fluctuations, regulatory changes, or other unforeseen circumstances. Past performance is not indicative of future results.
-                            </p>
-
-                            <h3 style={{fontSize: '15px', color: '#1a3e5c', marginTop: '20px', marginBottom: '10px'}}>
-                                No Guarantee of Returns
-                            </h3>
-                            <p style={{marginBottom: '15px'}}>
-                                <strong>There is no guarantee of profit or return of capital.</strong> Real estate development involves substantial
-                                risk including, but not limited to: construction delays and cost overruns, market absorption risk, interest rate risk,
-                                financing risk, regulatory and permitting delays, title issues, environmental liabilities, force majeure events,
-                                and general economic conditions. Investors should be prepared for the possibility of partial or total loss of invested capital.
-                            </p>
-
-                            <h3 style={{fontSize: '15px', color: '#1a3e5c', marginTop: '20px', marginBottom: '10px'}}>
-                                Illiquid Investment
-                            </h3>
-                            <p style={{marginBottom: '15px'}}>
-                                Real estate development investments are highly illiquid. There is no public market for the sale of interests in this
-                                opportunity, and investors should expect to hold their investment for the entire duration of the project. Early exit
-                                may not be possible or may result in substantial loss of capital.
-                            </p>
-
-                            <h3 style={{fontSize: '15px', color: '#1a3e5c', marginTop: '20px', marginBottom: '10px'}}>
-                                Not Investment, Tax, or Legal Advice
-                            </h3>
-                            <p style={{marginBottom: '15px'}}>
-                                This analysis is not investment advice, tax advice, or legal advice. Prospective investors should consult with
-                                their own financial advisors, tax professionals, and legal counsel before making any investment decision. The information
-                                provided herein is believed to be accurate but is not guaranteed and may change without notice.
-                            </p>
-
-                            <h3 style={{fontSize: '15px', color: '#1a3e5c', marginTop: '20px', marginBottom: '10px'}}>
-                                Suitability
-                            </h3>
-                            <p style={{marginBottom: '15px'}}>
-                                This investment opportunity is suitable only for sophisticated investors who meet accredited investor standards,
-                                who can afford to lose their entire investment, and who have sufficient financial resources and liquidity to withstand
-                                extended holding periods. This is not suitable for retirement funds or capital required for living expenses.
-                            </p>
-
-                            <h3 style={{fontSize: '15px', color: '#1a3e5c', marginTop: '20px', marginBottom: '10px'}}>
-                                Market Analysis Limitations
-                            </h3>
-                            <p style={{marginBottom: '15px'}}>
-                                The Comparative Market Analysis (CMA) referenced in this document represents an opinion of value, not a formal appraisal.
-                                Market conditions can change rapidly, particularly in the luxury real estate segment. The CMA is valid for 60-90 days
-                                from its preparation date (November 24, 2025). Actual sale prices may vary significantly from projected values.
-                                For lending purposes, a formal appraisal by a licensed appraiser will be required.
-                            </p>
-
-                            <h3 style={{fontSize: '15px', color: '#1a3e5c', marginTop: '20px', marginBottom: '10px'}}>
-                                St Andrews Country Club Membership
-                            </h3>
-                            <p style={{marginBottom: '15px'}}>
-                                The Builder's Program deposit ($150,000) and St Andrews Country Club membership (approximately $500,000) are separate
-                                costs not included in this development analysis. Club policies, fees, and deposit structures are subject to change
-                                at the club's discretion. The refundable portion of deposits is subject to club policies and timeline requirements.
-                            </p>
-
-                            <h3 style={{fontSize: '15px', color: '#1a3e5c', marginTop: '20px', marginBottom: '10px'}}>
-                                Due Diligence
-                            </h3>
-                            <p style={{marginBottom: '15px'}}>
-                                Prospective investors are responsible for conducting their own independent due diligence, including but not limited to:
-                                review of property title, survey, environmental reports, permits, contractor qualifications, market conditions,
-                                and all financial projections. Investors should retain independent professionals to verify all information presented herein.
-                            </p>
-
-                            <h3 style={{fontSize: '15px', color: '#1a3e5c', marginTop: '20px', marginBottom: '10px'}}>
-                                Conflicts of Interest
-                            </h3>
-                            <p style={{marginBottom: '15px'}}>
-                                Edmund Bogen and affiliated parties may receive compensation in the form of carried interest (5% of gross profit),
-                                real estate commissions on the eventual sale, and other fees. These compensation arrangements create potential conflicts
-                                of interest that should be carefully reviewed by prospective investors.
-                            </p>
-
-                            <h3 style={{fontSize: '15px', color: '#1a3e5c', marginTop: '20px', marginBottom: '10px'}}>
-                                No Registration
-                            </h3>
-                            <p style={{marginBottom: '15px'}}>
-                                No federal or state securities regulatory authority has reviewed, approved, or disapproved this information or
-                                determined if it is truthful or complete. Any representation to the contrary is a criminal offense.
-                            </p>
-
-                            <div style={{marginTop: '25px', padding: '15px', background: 'white', borderRadius: '6px', border: '2px solid #d32f2f'}}>
-                                <p style={{fontWeight: '600', color: '#d32f2f', marginBottom: '10px'}}>
-                                    IMPORTANT: INVESTMENT IN REAL ESTATE DEVELOPMENT INVOLVES SUBSTANTIAL RISK INCLUDING POSSIBLE LOSS OF PRINCIPAL
-                                </p>
-                                <p style={{fontSize: '13px'}}>
-                                    By reviewing this analysis, you acknowledge that you have read and understand these disclosures and that you will
-                                    conduct your own independent investigation and due diligence before making any investment decision.
-                                </p>
-                            </div>
-
-                            <p style={{fontSize: '12px', color: '#666', marginTop: '20px', fontStyle: 'italic'}}>
-                                Last Updated: November 24, 2025 | Analysis prepared by Edmund Bogen, Douglas Elliman Real Estate
-                            </p>
                         </div>
                     </div>
 
