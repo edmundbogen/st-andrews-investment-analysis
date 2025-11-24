@@ -565,8 +565,8 @@
         }
 
         function App() {
-            const [salePrice, setSalePrice] = useState(8250000);
-            const [buildCostPerSf, setBuildCostPerSf] = useState(600);
+            const [salePrice, setSalePrice] = useState(8900000);
+            const [buildCostPerSf, setBuildCostPerSf] = useState(525);
 
             const metrics = useMemo(() => calculateDealMetrics(salePrice, buildCostPerSf), [salePrice, buildCostPerSf]);
             // True breakeven: investors get capital back (0% return)
