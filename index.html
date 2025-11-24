@@ -674,7 +674,7 @@
                             <div style={{background: 'white', padding: '20px', borderRadius: '8px', marginBottom: '20px'}}>
                                 <h3 style={{color: '#1a3e5c', fontSize: '16px', marginBottom: '15px'}}>Investment Highlights</h3>
                                 <ul style={{marginLeft: '20px', lineHeight: '1.9'}}>
-                                    <li><strong>Prime Location:</strong> Foxborough Lane, St Andrews Country Club - same street as recent $13.16M sale (1 day DOM)</li>
+                                    <li><strong>Prime Location:</strong> Foxborough Lane, St Andrews Country Club - same community as recent $13.16M sale (1 day DOM)</li>
                                     <li><strong>Market-Tested Pricing:</strong> $9M exit supported by 4 comparable sales, professional CMA valuation</li>
                                     <li><strong>Rapid Absorption:</strong> Comparable properties selling in 10-21 days when priced correctly</li>
                                     <li><strong>Builder's Program:</strong> $150K deposit ($75K refundable) reduces upfront capital requirement</li>
@@ -836,6 +836,9 @@
                         <div className="slider-container">
                             <div className="current-price">
                                 {formatCurrency(salePrice)}
+                            </div>
+                            <div style={{textAlign: 'center', color: '#666', fontSize: '14px', marginBottom: '15px'}}>
+                                ${Math.round(salePrice / DEAL_PARAMS.homeSize).toLocaleString()}/SF
                             </div>
                             <input
                                 type="range"
@@ -1318,10 +1321,10 @@
                         </div>
 
                         <div className="alert alert-success" style={{marginTop: '25px'}}>
-                            <strong>Critical Market Indicator:</strong> 17903 Foxborough Lane (same street as subject property) went under
-                            contract in just 1 day at $13.16M, demonstrating exceptionally strong demand for premier new construction on
-                            Foxborough Lane. While that property represents the absolute top of the market with ultra-luxury finishes,
-                            it validates pricing power for properly positioned new construction at St Andrews.
+                            <strong>Critical Market Indicator:</strong> 17903 Foxborough Lane (same community as subject property) went under
+                            contract in just 1 day at $13.16M, demonstrating exceptionally strong demand for premier new construction at
+                            St Andrews Country Club. While that property represents the absolute top of the market with ultra-luxury finishes,
+                            it validates pricing power for properly positioned new construction in the community.
                         </div>
 
                         <div style={{marginTop: '25px'}}>
@@ -1341,7 +1344,7 @@
                                 <strong>Professional Market Opinion:</strong> At $9,000,000 ($1,286/SF), the subject property is positioned
                                 14% above the smaller non-waterfront comparable (17577 Scarsdale at $1,125/SF), which is justified by the 40% size
                                 premium. The pricing is also 18% below the waterfront average ($1,278/SF), appropriate for the non-waterfront location,
-                                and 22% below the ultra-luxury comp on the same street, creating a compelling value proposition.
+                                and 22% below the ultra-luxury comp in the same community, creating a compelling value proposition.
                             </p>
                             <p style={{fontSize: '13px', color: '#666', marginTop: '10px'}}>
                                 Source: Comparative Market Analysis prepared by Edmund Bogen, Douglas Elliman Real Estate | November 24, 2025
