@@ -401,8 +401,7 @@
             sellMonths: 4,
             sellingCostsPct: 0.07,
             investorReturnPct: 0.15, // 15% total return target
-            edmundEquity: 0.05, // 5% equity ownership
-            builderEquity: 0.05, // 5% equity ownership
+            edmundEquity: 0.10, // 10% carried interest
             investorEquity: 0.90, // 90% equity ownership
             edmundCommissionPct: 0.06
         };
@@ -479,8 +478,7 @@
 
             // Profit-based carried interest (10% of profit off the top)
             const carriedInterestTotal = Math.max(0, grossProfit * 0.10);
-            const edmundCarriedInterest = carriedInterestTotal * 0.50; // 5% of profit
-            const builderCarriedInterest = carriedInterestTotal * 0.50; // 5% of profit
+            const edmundCarriedInterest = carriedInterestTotal; // 10% of profit
 
             // Remaining profit to investors (90% of profit)
             const investorProfitShare = Math.max(0, grossProfit * 0.90);
@@ -493,7 +491,6 @@
                 : netProceeds - carriedInterestTotal;
 
             const edmundTotal = edmundCarriedInterest; // Edmund's actual profit (carried interest only)
-            const builderTotal = builderCarriedInterest;
 
             // Investor return analysis
             const investorPreferredReturn = totalCapital * p.investorReturnPct;
@@ -535,13 +532,11 @@
                 grossProfit,
                 carriedInterestTotal,
                 edmundCarriedInterest,
-                builderCarriedInterest,
                 investorProfitShare,
                 investorPreferredReturn,
                 totalNeededForInvestors,
                 investorShortfall,
                 edmundTotal,
-                builderTotal,
                 investorTotal,
                 investorROI,
                 overallROI,
@@ -982,16 +977,9 @@
                                     <>
                                         <tr style={{background: '#e3f2fd'}}>
                                             <td><strong>Edmund Carried Interest</strong></td>
-                                            <td>5% of gross profit</td>
+                                            <td>10% of gross profit</td>
                                             <td className="amount" style={{textAlign: 'right', color: '#00a000'}}>
                                                 {formatCurrency(metrics.edmundCarriedInterest)}
-                                            </td>
-                                        </tr>
-                                        <tr style={{background: '#f3e5f5'}}>
-                                            <td><strong>Builder Carried Interest</strong></td>
-                                            <td>5% of gross profit</td>
-                                            <td className="amount" style={{textAlign: 'right', color: '#00a000'}}>
-                                                {formatCurrency(metrics.builderCarriedInterest)}
                                             </td>
                                         </tr>
                                         <tr style={{background: '#e8f5e9'}}>
@@ -1015,16 +1003,9 @@
                                 </tr>
                                 <tr style={{background: '#e3f2fd'}}>
                                     <td><strong>Edmund Profit</strong></td>
-                                    <td>Carried interest (5% of profit)</td>
+                                    <td>Carried interest (10% of profit)</td>
                                     <td className="amount" style={{textAlign: 'right', color: '#00a000'}}>
                                         {formatCurrency(metrics.edmundTotal)}
-                                    </td>
-                                </tr>
-                                <tr style={{background: '#f3e5f5'}}>
-                                    <td><strong>Builder Total</strong></td>
-                                    <td>Carried interest only</td>
-                                    <td className="amount" style={{textAlign: 'right', color: '#00a000'}}>
-                                        {formatCurrency(metrics.builderTotal)}
                                     </td>
                                 </tr>
                             </tbody>
@@ -1046,14 +1027,7 @@
                                 <div className="metric-label">Edmund Profit</div>
                                 <div className="metric-value">{formatCurrency(metrics.edmundTotal)}</div>
                                 <div style={{fontSize: '14px', color: '#666', marginTop: '8px'}}>
-                                    5% carried interest only
-                                </div>
-                            </div>
-                            <div className="metric" style={{borderLeftColor: '#7b1fa2'}}>
-                                <div className="metric-label">Builder Total</div>
-                                <div className="metric-value">{formatCurrency(metrics.builderTotal)}</div>
-                                <div style={{fontSize: '14px', color: '#666', marginTop: '8px'}}>
-                                    5% of gross profit
+                                    10% carried interest
                                 </div>
                             </div>
                         </div>
@@ -1076,7 +1050,7 @@
                             <p><strong>Profit Distribution Structure:</strong></p>
                             <ul style={{marginLeft: '20px', marginTop: '8px'}}>
                                 <li>Gross profit = Net proceeds - Investor capital</li>
-                                <li>Carried interest (10% of profit): 5% Edmund, 5% Builder</li>
+                                <li>Carried interest: 10% of profit to Edmund</li>
                                 <li>Investor profit share: 90% of gross profit + return of capital</li>
                                 <li>6% realtor commissions (buyer + seller agents) included in selling costs</li>
                             </ul>
@@ -1460,8 +1434,8 @@
                                 Conflicts of Interest
                             </h3>
                             <p style={{marginBottom: '15px'}}>
-                                Edmund Bogen and affiliated parties may receive compensation in the form of carried interest (5% of gross profit),
-                                real estate commissions on the eventual sale, and other fees. These compensation arrangements create potential conflicts
+                                Edmund Bogen may receive compensation in the form of carried interest (10% of gross profit)
+                                and real estate commissions on the eventual sale. These compensation arrangements create potential conflicts
                                 of interest that should be carefully reviewed by prospective investors.
                             </p>
 
